@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from models.user import User
 from services.user_service import *
 
@@ -7,43 +7,68 @@ router = APIRouter()
 @router.post("/")
 async def create_user(user: User):
     """Endpoint pentru adăugarea unui utilizator"""
-    add_user(user)
-    return {"message": "User added successfully"}
+    try:
+        add_user(user)
+        return {"message": "User added successfully"}
+    except ValueError as ve:
+        raise HTTPException(status_code=500, detail=str(ve))
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/")
 async def read_all_users():
     """Endpoint pentru obținerea tuturor utilizatorilor"""
-    users = get_all_users()
-    return users
+    try:
+        users = get_all_users()
+        return users
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{user_id}")
 async def read_user(user_id: str):
     """Endpoint pentru obținerea unui utilizator după ID"""
-    user = get_user_by_id(user_id)
-    if user:
+    try:
+        user = get_user_by_id(user_id)
         return user
-    return {"error": "User not found"}
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/email/{email}")
 async def read_user_by_email(email: str):
     """Endpoint pentru obținerea unui utilizator după email"""
-    user = get_user_by_email(email)
-    if user:
-        return user
-    return {"error": "User not found"}
+    try:
+        user = get_user_by_email(email)
+        if user:
+            return user
+        else:
+            raise HTTPException(status_code=404, detail="User not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/{user_id}")
 async def update_user(user_id: str, user: User):
     """Endpoint pentru actualizarea unui utilizator"""
-    updated = update_user_by_id(user_id, user)
-    if updated:
+    try:
+        update_user_by_id(user_id, user)
         return {"message": "User updated successfully"}
-    return {"error": "User not found"}
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/{user_id}")
 async def delete_user(user_id: str):
     """Endpoint pentru ștergerea unui utilizator"""
-    deleted = delete_user_by_id(user_id)
-    if deleted:
+    try:
+        delete_user_by_id(user_id)
         return {"message": "User deleted successfully"}
-    return {"error": "User not found"}
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

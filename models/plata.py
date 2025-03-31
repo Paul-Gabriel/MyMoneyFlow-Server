@@ -3,8 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 class Plata(BaseModel):
-    # id: Optional[int] = None  # Poate fi generat automat
-    user_id: str  # ID-ul utilizatorului care face plata
+    user_ref: str  # ID-ul utilizatorului care face plata
     suma: float = Field(gt=0, description="Suma trebuie să fie mai mare decât 0")
     categorie: str
     descriere: str
@@ -13,8 +12,7 @@ class Plata(BaseModel):
     def to_dict(self):
         """Convertim obiectul Plata într-un dicționar pentru Firebase"""
         return {
-            # "id": self.id,
-            "user_id": self.user_id,
+            "user_ref": self.user_ref,
             "suma": self.suma,
             "categorie": self.categorie,
             "descriere": self.descriere,
