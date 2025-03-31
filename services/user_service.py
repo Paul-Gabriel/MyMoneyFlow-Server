@@ -12,7 +12,7 @@ def add_user(user: User):
         raise ValueError("Un utilizator cu acest email există deja.")
     
     # Verifică dacă procentajele insumeazază 100%
-    if (user.procent_necesitati + user.procent_dorinte + user.procent_economii != 100):
+    if (user.procentNecesitati + user.procentDorinte + user.procentEconomii != 100):
         raise ValueError("Suma procentelor trebuie să fie 100%.")
 
     # Verifică dacă venitul este pozitiv
@@ -55,7 +55,7 @@ def update_user_by_id(user_id: str, user: User):
     """Actualizează datele unui utilizator"""
     
     # Verifică dacă procentajele insumeazază 100%
-    if (user.procent_necesitati + user.procent_dorinte + user.procent_economii != 100):
+    if (user.procentNecesitati + user.procentDorinte + user.procentEconomii != 100):
         raise ValueError("Suma procentelor trebuie să fie 100%.")
 
     user_doc = users_collection.document(user_id).get()

@@ -1,5 +1,4 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
 
 class User(BaseModel):
     nume: str
@@ -7,9 +6,9 @@ class User(BaseModel):
     email: EmailStr
     parola: str
     venit: int = Field(ge=0, description="Venitul trebuie să fie pozitiv")
-    procent_necesitati: int = Field(ge=0, le=100, description="Procent între 0 și 100")
-    procent_dorinte: int = Field(ge=0, le=100, description="Procent între 0 și 100")
-    procent_economii: int = Field(ge=0, le=100, description="Procent între 0 și 100")
+    procentNecesitati: int = Field(ge=0, le=100, description="Procent între 0 și 100")
+    procentDorinte: int = Field(ge=0, le=100, description="Procent între 0 și 100")
+    procentEconomii: int = Field(ge=0, le=100, description="Procent între 0 și 100")
 
     def to_dict(self):
         """Convertim obiectul User într-un dicționar pentru Firebase"""
