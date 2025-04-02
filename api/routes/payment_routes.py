@@ -15,6 +15,17 @@ async def create_payment(payment: Plata):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/")
+async def list_payments():
+    """Obține toate plățile"""
+    try:
+        payments = get_all_payments()
+        return payments
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/{user_ref}")
 async def list_payments(user_ref: str):
     """Obține toate plățile unui utilizator"""

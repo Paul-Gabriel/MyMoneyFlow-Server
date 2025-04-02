@@ -19,6 +19,14 @@ def add_payment(payment: Plata):
     
     payments_collection.add(payment_dict)
 
+def get_all_payments():
+    """Obține toate plățile"""
+    payments = payments_collection.stream()
+    if payments:
+        return [{"plata_id": p.id, **p.to_dict()} for p in payments]
+    else:
+        raise HTTPException(status_code=404, detail="No payments found")
+
 def get_payments_by_user(user_ref: str):
     """Obține toate plățile unui utilizator"""
     payments = payments_collection.where("user_ref", "==", user_ref).stream()
