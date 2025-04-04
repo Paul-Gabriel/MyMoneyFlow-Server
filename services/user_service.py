@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from services.de_email import send_email
-from services.encryption_service import encrypt_data
+from services.encryption_service import decrypt_data, decrypt_user_dict, encrypt_data, encrypt_user_dict
 from services.firebase_service import get_collection
 from models.user import User
 import secrets
@@ -29,7 +29,10 @@ def add_user(user: User):
     user_dict = user.model_dump()
     user_dict['confirmation_token'] = confirmation_token
     user_dict['confirmed'] = False
-    # user_dict['venit'] = encrypt_data(str(user_dict['venit']))
+    
+    # Encrypt sensitive data
+    user_dict = encrypt_user_dict(user_dict)
+    
     users_collection.add(user_dict)
     
     # Send confirmation email
@@ -52,6 +55,10 @@ def get_user_by_id(user_id: str):
     if user_doc.exists:
         user_data = user_doc.to_dict()
         user_data['user_id'] = user_doc.id
+        
+        # Decrypt the sensitive data
+        user_data = decrypt_user_dict(user_data)
+        
         return user_data
     else:
         raise HTTPException(status_code=404, detail="User not found")
@@ -63,17 +70,39 @@ def get_all_users():
     for user_doc in all_users:
         user_data = user_doc.to_dict()
         user_data['user_id'] = user_doc.id
+        
+        # Decrypt the sensitive data
+        user_data = decrypt_user_dict(user_data)
+        
         users_list.append(user_data)
     return users_list
 
 def get_user_by_email(email: str):
     """Obține un utilizator după email și returnează conținutul documentului împreună cu ID-ul"""
-    query = users_collection.where("email", "==", email).get()
-    for user_doc in query:
+    all_users = users_collection.get()
+    for user_doc in all_users:
         user_data = user_doc.to_dict()
-        user_data['user_id'] = user_doc.id
-        return user_data
+        
+        # Decrypt the email
+        decrypted_email = decrypt_data(user_data.get("email"))
+        
+        if decrypted_email == email:
+            user_data['user_id'] = user_doc.id
+            
+            # Decrypt the sensitive data
+            user_data = decrypt_user_dict(user_data)
+            
+            return user_data
     return None
+    # for user_doc in query:
+    #     user_data = user_doc.to_dict()
+    #     user_data['user_id'] = user_doc.id
+        
+    #     # Decrypt the sensitive data
+    #     user_data = decrypt_user_dict(user_data)
+        
+    #     return user_data
+    # return None
 
 def update_user_by_id(user_id: str, user: User):
     """Actualizează datele unui utilizator"""
@@ -88,7 +117,12 @@ def update_user_by_id(user_id: str, user: User):
         existing_user = get_user_by_email(user.email)
         if existing_user and existing_user['user_id'] != user_id:
             raise ValueError("Un alt utilizator cu acest email există deja.")
-        users_collection.document(user_id).update(user.model_dump())
+        
+        # Encrypt sensitive data
+        user_dict = user.model_dump()
+        user_dict = encrypt_user_dict(user_dict)
+        
+        users_collection.document(user_id).update(user_dict)
     else:
         raise HTTPException(status_code=404, detail="User not found")
 

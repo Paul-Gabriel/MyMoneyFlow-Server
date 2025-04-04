@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+from services.encryption_service import decrypt_payment_dict, encrypt_payment_dict
 from services.firebase_service import get_collection
 from models.plata import Plata
 from services.user_service import get_user_by_id
@@ -17,13 +18,16 @@ def add_payment(payment: Plata):
     if payment_dict.get("suma") <= 0:
         raise ValueError("Suma trebuie să fie pozitivă.")
     
+    # Encrypt sensitive data
+    payment_dict = encrypt_payment_dict(payment_dict)
+    
     payments_collection.add(payment_dict)
 
 def get_all_payments():
     """Obține toate plățile"""
     payments = payments_collection.stream()
     if payments:
-        return [{"plata_id": p.id, **p.to_dict()} for p in payments]
+        return [{"plata_id": p.id, **decrypt_payment_dict(p.to_dict())} for p in payments]
     else:
         raise HTTPException(status_code=404, detail="No payments found")
 
@@ -31,7 +35,7 @@ def get_payments_by_user(user_ref: str):
     """Obține toate plățile unui utilizator"""
     payments = payments_collection.where("user_ref", "==", user_ref).stream()
     if payments:
-        return [{"plata_id": p.id, **p.to_dict()} for p in payments]
+        return [{"plata_id": p.id, **decrypt_payment_dict(p.to_dict())} for p in payments]
     else:
         raise HTTPException(status_code=404, detail="No payments found for this user")
 
@@ -39,7 +43,7 @@ def get_payment_by_id(payment_id: str):
     """Obține o plată după ID"""
     payment = payments_collection.document(payment_id).get()
     if payment.exists:
-        return {"plata_id": payment.id, **payment.to_dict()}
+        return {"plata_id": payment.id, **decrypt_payment_dict(payment.to_dict())}
     else:
         raise HTTPException(status_code=404, detail="Payment not found")
     
@@ -48,6 +52,10 @@ def update_payment_by_id(payment_id: str, payment: Plata):
     payment_doc = payments_collection.document(payment_id).get()
     if payment_doc.exists:
         payment_dict = payment.model_dump()
+        
+        # Encrypt sensitive data
+        payment_dict = encrypt_payment_dict(payment_dict)
+        
         payments_collection.document(payment_id).update(payment_dict)
     else:
         raise HTTPException(status_code=404, detail="Payment not found")

@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 de_email.py
 test.json
+services/encryption_service.py
