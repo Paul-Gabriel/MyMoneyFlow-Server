@@ -1,6 +1,9 @@
 from fastapi import HTTPException
+from services.de_email import send_email
+from services.encryption_service import encrypt_data
 from services.firebase_service import get_collection
 from models.user import User
+import secrets
 
 users_collection = get_collection("users")
 
@@ -19,8 +22,29 @@ def add_user(user: User):
     if user.venit <= 0:
         raise ValueError("Venitul trebuie să fie pozitiv.")
     
+    # Generate a confirmation token
+    confirmation_token = secrets.token_urlsafe(32)
+    
+    # Save the user and token in the database
     user_dict = user.model_dump()
+    user_dict['confirmation_token'] = confirmation_token
+    user_dict['confirmed'] = False
+    # user_dict['venit'] = encrypt_data(str(user_dict['venit']))
     users_collection.add(user_dict)
+    
+    # Send confirmation email
+    send_email(user.email, confirmation_token)
+
+def confirm_user_email(token: str):
+    """Confirmă un utilizator pe baza token-ului"""
+    query = users_collection.where("confirmation_token", "==", token).get()
+    for user_doc in query:
+        user_data = user_doc.to_dict()
+        user_data['user_id'] = user_doc.id
+        # Actualizează documentul pentru a confirma utilizatorul
+        users_collection.document(user_data['user_id']).update({"confirmed": True})
+        return
+    raise HTTPException(status_code=404, detail="Token not found")
 
 def get_user_by_id(user_id: str):
     """Obține un utilizator după ID și returnează conținutul documentului împreună cu ID-ul"""

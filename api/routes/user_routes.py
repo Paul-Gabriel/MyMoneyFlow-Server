@@ -1,6 +1,9 @@
 from fastapi import APIRouter, HTTPException
 from models.user import User
-from services.user_service import *
+from services.firebase_service import get_collection
+from services.user_service import add_user, confirm_user_email, delete_user_by_id, get_all_users, get_user_by_email, get_user_by_id, update_user_by_id
+
+users_collection = get_collection("users")
 
 router = APIRouter()
 
@@ -16,6 +19,15 @@ async def create_user(user: User):
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/confirm/{token}")
+def confirm_user(token: str):
+    """Confirmă un utilizator pe baza token-ului"""
+    try:
+        confirm_user_email(token)
+        return {"message": "Contul a fost confirmat cu succes!"}
+    except HTTPException as http_exc:
+        raise HTTPException(status_code=404, detail="Token invalid sau expirat.")
 
 @router.get("/")
 async def read_all_users():
