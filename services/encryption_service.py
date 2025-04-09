@@ -57,7 +57,7 @@ def decrypt_user_dict(data: dict) -> dict:
     data['prenume'] = decrypt_data(data['prenume'])
     data['email'] = decrypt_data(data['email'])
     data['parola'] = decrypt_data(data['parola'])
-    data['venit'] = decrypt_data(data['venit'])
+    data['venit'] = decrypt_number(data['venit'])
     data['procentNecesitati'] = decrypt_number(data['procentNecesitati'])
     data['procentDorinte'] = decrypt_number(data['procentDorinte'])
     data['procentEconomii'] = decrypt_number(data['procentEconomii'])
